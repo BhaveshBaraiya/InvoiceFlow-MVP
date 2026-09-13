@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvoiceFlow - Pro Edition</title>
+    <!-- Google Fonts: Inter for a premium SaaS look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: '#18181b', // zinc-900
+                        accent: '#2563eb', // blue-600
+                        accentHover: '#1d4ed8', // blue-700
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px rgba(0, 0, 0, 0.05)',
+                        'float': '0 10px 40px -10px rgba(0,0,0,0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fcfcfd; }
+        
+        /* High-end Auth Background */
+        .auth-bg {
+            background: radial-gradient(circle at 15% 50%, rgba(37, 99, 235, 0.08), transparent 25%),
+                        radial-gradient(circle at 85% 30%, rgba(37, 99, 235, 0.08), transparent 25%);
+            background-color: #fafafa;
+        }
+
+        .auth-banner-img {
+            background-image: url('https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=1000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .sidebar-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        @media (max-width: 768px) { .sidebar-closed { transform: translateX(-100%); } }
+        
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Custom Inputs */
+        .input-premium {
+            border: 1px solid #e4e4e7;
+            background: #fff;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .input-premium:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        /* Nav active state */
+        .nav-btn.active {
+            background: #27272a; /* zinc-800 */
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .image-upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .image-upload-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex overflow-hidden">
+
+    <!-- Premium Auth Screen -->
+    <div id="auth-screen" class="fixed inset-0 z-[100] flex items-center justify-center auth-bg hidden overflow-y-auto p-4 sm:p-8">
+        
+        <div class="w-full max-w-[1000px] bg-white rounded-2xl shadow-float flex flex-col md:flex-row overflow-hidden border border-gray-100 min-h-[600px]">
+            
+            <!-- Banner Section (Always visible, top on mobile, left on desktop) -->
+            <div class="w-full md:w-5/12 h-48 md:h-auto auth-banner-img relative flex flex-col justify-end p-8">
+                <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-primary/20"></div>
+                <div class="relative z-10 text-white">
+                    <h2 class="text-3xl font-bold mb-2">InvoiceFlow Pro</h2>
+                    <p class="text-sm text-gray-200">The enterprise-grade billing platform for modern businesses. Streamline your invoicing seamlessly.</p>
+                </div>
+            </div>
+
+            <!-- Form Section -->
+            <div class="w-full md:w-7/12 p-8 sm:p-12 flex flex-col justify-center bg-white relative">
+                
+                <!-- Login View -->
+                <div id="login-form" class="max-w-md mx-auto w-full">
+                    <div class="mb-8 text-center md:text-left">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary text-white mb-4 shadow-md">
+                            <i class="fa-solid fa-bolt text-xl"></i>
+                        </div>
+                        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
+                        <p class="text-gray-500 mt-2 text-sm">Sign in to your workspace.</p>
+                    </div>
+                    
+                    <button class="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-xl hover:bg-gray-50 transition shadow-sm mb-6" onclick="appLogin()">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google">
+                        Continue with Google
+                    </button>
+                    
+                    <div class="flex items-center mb-6">
+                        <div class="flex-grow border-t border-gray-100"></div>
+                        <span class="mx-4 text-xs font-medium text-gray-400 uppercase tracking-wider">or email</span>
+                        <div class="flex-grow border-t border-gray-100"></div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Email Address</label>
+                            <input type="email" value="bhavesh@invoiceflow.app" class="w-full px-4 py-2.5 rounded-xl input-premium text-sm">
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1.5">
+                                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Password</label>
+                                <a href="#" class="text-xs text-accent font-medium hover:underline">Forgot?</a>
+                            </div>
+                            <input type="password" value="demo123" class="w-full px-4 py-2.5 rounded-xl input-premium text-sm">
+                        </div>
+                        <button onclick="appLogin()" class="w-full bg-primary hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-xl transition shadow-md mt-2">
+                            Sign In
+                        </button>
+                    </div>
+                    <p class="text-center mt-8 text-gray-500 text-sm">
+                        Don't have an account? <button onclick="toggleAuth()" class="text-primary font-semibold hover:underline">Register now</button>
+                    </p>
+                </div>
+
+                <!-- Register View -->
+                <div id="register-form" class="max-w-md mx-auto w-full hidden">
+                    <div class="mb-8 text-center md:text-left">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-accent text-white mb-4 shadow-md">
+                            <i class="fa-solid fa-rocket text-xl"></i>
+                        </div>
+                        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Create Account</h1>
+                        <p class="text-gray-500 mt-2 text-sm">Start managing your invoices professionally.</p>
+                    </div>
+                    
+                    <button class="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-xl hover:bg-gray-50 transition shadow-sm mb-6" onclick="appLogin()">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google">
+                        Sign up with Google
+                    </button>
+                    
+                    <div class="flex items-center mb-6">
+                        <div class="flex-grow border-t border-gray-100"></div>
+                        <span class="mx-4 text-xs font-medium text-gray-400 uppercase tracking-wider">or email</span>
+                        <div class="flex-grow border-t border-gray-100"></div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Full Name</label>
+                            <input type="text" placeholder="e.g. Bhavesh Baraiya" class="w-full px-4 py-2.5 rounded-xl input-premium text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Email Address</label>
+                            <input type="email" placeholder="hello@example.com" class="w-full px-4 py-2.5 rounded-xl input-premium text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Password</label>
+                            <input type="password" placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl input-premium text-sm">
+                        </div>
+                        <button onclick="appLogin()" class="w-full bg-accent hover:bg-accentHover text-white font-medium py-3 px-4 rounded-xl transition shadow-md mt-2">
+                            Create Account
+                        </button>
+                    </div>
+                    <p class="text-center mt-8 text-gray-500 text-sm">
+                        Already have an account? <button onclick="toggleAuth()" class="text-primary font-semibold hover:underline">Sign in</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app-container" class="flex w-full h-full relative">
+        
+        <!-- Sidebar Overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-primary/40 backdrop-blur-sm z-20 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar-transition sidebar-closed md:translate-x-0 fixed md:static inset-y-0 left-0 w-[260px] bg-primary text-gray-300 z-30 flex flex-col h-full shrink-0 shadow-2xl md:shadow-none">
+            
+            <!-- Clickable Logo -->
+            <div class="p-6 flex items-center justify-between cursor-pointer group" onclick="go('dashboard')" title="Go to Dashboard">
+                <div class="text-xl font-bold flex items-center gap-3 text-white">
+                    <div class="w-8 h-8 rounded-lg bg-white text-primary flex items-center justify-center shadow-md group-hover:scale-105 transition-transform"><i class="fa-solid fa-bolt"></i></div>
+                    InvoiceFlow
+                </div>
+                <button class="md:hidden text-gray-400 hover:text-white" onclick="event.stopPropagation(); toggleSidebar();">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="px-6 mb-4 mt-2">
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Main Menu</p>
+            </div>
+
+            <nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scroll">
+                <button onclick="go('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-zinc-800/50 hover:text-white transition" data-view="dashboard">
+                    <i class="fa-solid fa-chart-pie w-5 text-center text-gray-400"></i> Dashboard
+                </button>
+                <button onclick="go('invoices')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-zinc-800/50 hover:text-white transition" data-view="invoices">
+                    <i class="fa-solid fa-file-invoice w-5 text-center text-gray-400"></i> Invoices
+                </button>
+                <button onclick="go('clients')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-zinc-800/50 hover:text-white transition" data-view="clients">
+                    <i class="fa-solid fa-users w-5 text-center text-gray-400"></i> Clients
+                </button>
+                <button onclick="go('templates')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-zinc-800/50 hover:text-white transition" data-view="templates">
+                    <i class="fa-solid fa-layer-group w-5 text-center text-gray-400"></i> Templates
+                </button>
+                <button onclick="go('business')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-zinc-800/50 hover:text-white transition" data-view="business">
+                    <i class="fa-solid fa-building w-5 text-center text-gray-400"></i> Business Profile
+                </button>
+                <button onclick="go('settings')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-zinc-800/50 hover:text-white transition" data-view="settings">
+                    <i class="fa-solid fa-sliders w-5 text-center text-gray-400"></i> Settings
+                </button>
+            </nav>
+
+            <!-- Clickable User Profile -->
+            <div class="p-4 border-t border-zinc-800/50">
+                <div class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-zinc-800 cursor-pointer transition group" onclick="openUserProfileModal()" title="Edit Profile">
+                    <img id="sb-avatar" src="https://ui-avatars.com/api/?name=Bhavesh+Baraiya&background=2563eb&color=fff" class="w-9 h-9 rounded-full object-cover shadow-sm bg-zinc-800 border border-zinc-700">
+                    <div class="flex-1 min-w-0">
+                        <p id="sb-name" class="text-sm font-medium truncate text-white group-hover:text-accent transition-colors">Bhavesh Baraiya</p>
+                        <p class="text-xs text-gray-500 truncate">Pro Edition</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-xs text-gray-600 group-hover:text-gray-400"></i>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#fcfcfd]">
+            <!-- Header -->
+            <header class="bg-white/80 backdrop-blur-md border-b border-gray-200/80 px-6 py-4 flex items-center justify-between shrink-0 sticky top-0 z-10">
+                <div class="flex items-center gap-4">
+                    <button class="md:hidden text-gray-500 hover:text-gray-900 bg-gray-100 w-8 h-8 rounded-md flex items-center justify-center transition" onclick="toggleSidebar()">
+                        <i class="fa-solid fa-bars text-sm"></i>
+                    </button>
+                    <div>
+                        <h1 id="page-title" class="text-xl font-bold text-gray-900 tracking-tight">Overview</h1>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button class="hidden sm:flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-gray-300 shadow-sm transition" onclick="go('templates')">
+                        <i class="fa-solid fa-palette text-gray-400"></i> Design
+                    </button>
+                    <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-gray-800 shadow-md shadow-primary/20 transition flex items-center gap-2" onclick="newInvoice()">
+                        <i class="fa-solid fa-plus text-xs"></i> <span class="hidden sm:inline">New Invoice</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dynamic Content Area -->
+            <div id="content" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 hide-scroll">
+                <!-- Content injected here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Universal Modal Container -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-primary/40 backdrop-blur-sm z-[60] hidden items-center justify-center p-4 transition-opacity opacity-0">
+        <div id="modal-container" class="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl transform scale-95 transition-transform duration-300 border border-gray-100">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-2xl shrink-0">
+                <h2 id="modal-title" class="text-lg font-bold text-gray-900 tracking-tight">Modal Title</h2>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 border border-transparent hover:border-gray-200 w-8 h-8 rounded-full flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="modal-body" class="p-6 overflow-y-auto flex-1 hide-scroll bg-gray-50/30">
+                <!-- Modal content -->
+            </div>
+            <div id="modal-footer" class="px-6 py-4 border-t border-gray-100 bg-white flex justify-end gap-3 rounded-b-2xl shrink-0">
+                <button onclick="closeModal()" class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition shadow-sm">Cancel</button>
+                <button id="modal-action-btn" class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition shadow-md">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden PDF Render Container -->
+    <div id="pdf-container" class="fixed -left-[9999px] top-0 w-[800px] bg-white text-black p-10 hidden"></div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-primary text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 z-[70] border border-gray-700">
+        <i class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toast-msg" class="text-sm font-medium">Notification</span>
+    </div>
+
+<script>
+/* ==========================================================================
+   State & Global Configuration
+   ========================================================================== */
+const STORAGE_KEY = 'invoiceflow_pro_v1';
+const TODAY = new Date().toISOString().slice(0,10);
+
+const TEMPLATES = [
+    { id: 'modern', name: 'Modern SaaS', desc: 'Clean, spacious, contemporary style.', type: 'Free', preview: 'bg-white border-gray-200' },
+    { id: 'professional', name: 'Corporate Pro', desc: 'Structured and highly professional.', type: 'Free', preview: 'bg-slate-50 border-slate-200' },
+    { id: 'minimal', name: 'Minimalist', desc: 'Stripped back to essentials.', type: 'Free', preview: 'bg-gray-50 border-gray-200' },
+    { id: 'standard', name: 'Standard', desc: 'Traditional invoice layout.', type: 'Free', preview: 'bg-blue-50 border-blue-100' },
+    { id: 'nebula', name: 'Dark Nebula', desc: 'Deep space aesthetic for creatives.', type: 'Premium', preview: 'bg-gray-900 border-gray-700' },
+    { id: 'creative', name: 'Creative Studio', desc: 'Vibrant and bold layout.', type: 'Premium', preview: 'bg-pink-50 border-pink-200' },
+    { id: 'executive', name: 'Executive', desc: 'High-end elegant styling.', type: 'Premium', preview: 'bg-zinc-100 border-zinc-300' },
+    { id: 'signature', name: 'IF Signature', desc: 'Our premium signature brand design.', type: 'Premium', preview: 'bg-indigo-50 border-indigo-200' },
+    { id: 'neon', name: 'Cyber Neon', desc: 'High contrast dark mode with neon accents.', type: 'Premium', preview: 'bg-black border-green-500' },
+    { id: 'vintage', name: 'Vintage Letterpress', desc: 'Classic paper aesthetic.', type: 'Premium', preview: 'bg-[#fdfbf7] border-[#e8e4d9]' },
+    { id: 'contrast', name: 'High Contrast', desc: 'Maximum readability.', type: 'Premium', preview: 'bg-white border-black border-2' },
+    { id: 'ecommerce', name: 'E-commerce', desc: 'Optimized for physical product shipping.', type: 'Premium', preview: 'bg-orange-50 border-orange-200' },
+    { id: 'agency', name: 'Agency', desc: 'Perfect for digital services.', type: 'Premium', preview: 'bg-purple-50 border-purple-200' },
+    { id: 'freelancer', name: 'Freelancer Pro', desc: 'Casual yet professional.', type: 'Premium', preview: 'bg-teal-50 border-teal-200' },
+    { id: 'enterprise', name: 'Enterprise Data', desc: 'Dense data visualization layout.', type: 'Premium', preview: 'bg-slate-100 border-slate-300' },
+    { id: 'startup', name: 'Startup Pitch', desc: 'Modern gradient accents.', type: 'Premium', preview: 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200' }
+];
+
+const DEFAULT_STATE = {
+    user: {
+        name: 'Bhavesh Baraiya',
+        email: 'hello@bhaveshbaraiya.dev',
+        avatar: '' // Base64 empty by default, fallback used in UI
+    },
+    business: {
+        name: 'Bhavesh Digital',
+        email: 'billing@bhaveshbaraiya.dev',
+        phone: '+91 98765 43210',
+        address: 'Bhavnagar, Gujarat, India',
+        website: 'bhaveshbaraiya.dev',
+        gstin: '24AAACC1206D1Z2',
+        bank: 'HDFC Bank • A/C 987654321',
+        upi: 'bhavesh@upi',
+        logo: '' // Base64 logo
+    },
+    clients: [
+        { id: 1, name: 'Ailaysa Technologies', company: 'Ailaysa Technologies', email: 'accounts@ailaysa.com', address: 'India' },
+        { id: 2, name: 'T3Universe', company: 'T3Universe.de', email: 'billing@t3universe.de', address: 'Germany' }
+    ],
+    invoices: [
+        { id: 1, number: 'INV-0001', clientId: 1, date: '2026-06-30', due: '2026-07-07', status: 'paid', currency: 'INR', items: [{ description: 'Frontend API integration & Next.js Architecture', quantity: 1, rate: 45000 }], discount: 0, discountType: 'fixed', tax: 18, charges: 0, notes: 'Thank you for your business.', terms: 'Payment due within 7 days.', payment: 'UPI / Bank transfer', template: 'modern' }
+    ],
+    settings: { template: 'modern', tax: 18 }
+};
+
+let S = JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_STATE;
+let VIEW = 'dashboard', EDIT_ID = null;
+
+function saveState() { 
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); 
+    updateSidebarUser();
+}
+
+function updateSidebarUser() {
+    document.getElementById('sb-name').textContent = S.user.name || 'User';
+    const avatarImg = document.getElementById('sb-avatar');
+    if (S.user.avatar) {
+        avatarImg.src = S.user.avatar;
+    } else {
+        avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(S.user.name || 'User')}&background=2563eb&color=fff`;
+    }
+}
+
+// Image Scaler for Base64 (Avatars & Logos)
+function encodeImageFileAsURL(element, maxW, callback) {
+    let file = element.files[0];
+    if (!file) return;
+    
+    // Check file size (< 2MB recommended for local storage before compression)
+    if(file.size > 2 * 1024 * 1024) {
+        alert("Image is too large. Please select an image under 2MB.");
+        return;
+    }
+
+    let reader = new FileReader();
+    reader.onloadend = function() {
+        let img = new Image();
+        img.onload = function() {
+            let canvas = document.createElement('canvas');
+            let ctx = canvas.getContext('2d');
+            let scale = Math.min(maxW / img.width, 1);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            callback(canvas.toDataURL('image/jpeg', 0.85));
+        }
+        img.src = reader.result;
+    }
+    reader.readAsDataURL(file);
+}
+
+// Utilities
+function formatMoney(n, c = 'INR') { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: c }).format(+n || 0); }
+function getClientName(id) { const c = S.clients.find(x => x.id == id); return c ? (c.company || c.name) : 'Unknown Client'; }
+function calculateInvoice(i) {
+    let sub = i.items.reduce((a, x) => a + (+x.quantity || 0) * (+x.rate || 0), 0);
+    let d = i.discountType === 'percent' ? sub * (+i.discount || 0) / 100 : +i.discount || 0;
+    let t = Math.max(0, sub - d) * (+i.tax || 0) / 100;
+    let ch = +i.charges || 0;
+    return { sub, discount: d, tax: t, charges: ch, total: Math.max(0, sub - d) + t + ch };
+}
+function getStatusBadge(status) {
+    const map = {
+        'paid': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        'pending': 'bg-amber-100 text-amber-700 border-amber-200',
+        'overdue': 'bg-rose-100 text-rose-700 border-rose-200',
+        'draft': 'bg-gray-100 text-gray-700 border-gray-200'
+    };
+    return `<span class="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded border ${map[status]}">${status}</span>`;
+}
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.remove('translate-y-20', 'opacity-0');
+    setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
+}
+function escapeHtml(unsafe) { return String(unsafe).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+/* ==========================================================================
+   Navigation
+   ========================================================================== */
+function toggleAuth() {
+    document.getElementById('login-form').classList.toggle('hidden');
+    document.getElementById('register-form').classList.toggle('hidden');
+}
+
+function appLogin() {
+    document.getElementById('auth-screen').classList.add('hidden');
+    go('dashboard');
+}
+
+function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    sb.classList.toggle('sidebar-closed');
+    sb.classList.toggle('translate-x-0');
+    overlay.classList.toggle('hidden');
+}
+
+function go(view) {
+    VIEW = view;
+    if (window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('sidebar-closed')) {
+        toggleSidebar();
+    }
+    
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        if(btn.dataset.view === view) {
+            btn.classList.add('active');
+            btn.classList.remove('hover:bg-zinc-800/50', 'text-gray-300');
+        } else {
+            btn.classList.remove('active');
+            btn.classList.add('hover:bg-zinc-800/50', 'text-gray-300');
+        }
+    });
+
+    const meta = {
+        dashboard: 'Overview', invoices: 'Invoices', clients: 'Client Directory', 
+        templates: 'Template Gallery', business: 'Business Settings', settings: 'App Preferences'
+    };
+    document.getElementById('page-title').textContent = meta[view];
+    
+    const views = { dashboard: renderDashboard, invoices: renderInvoices, clients: renderClients, templates: renderTemplates, business: renderBusiness, settings: renderSettings };
+    document.getElementById('content').innerHTML = views[view]();
+}
+
+/* ==========================================================================
+   Views
+   ========================================================================== */
+function renderInvoiceTable(list, isCompact = false) {
+    if (!list.length) {
+        return `<div class="text-center py-16"><div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 mb-4"><i class="fa-solid fa-file-invoice text-2xl text-gray-300"></i></div><h3 class="text-base font-semibold text-gray-900">No invoices found</h3><p class="text-gray-500 text-sm mt-1 mb-4">Get started by creating your first invoice.</p><button onclick="newInvoice()" class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-gray-800 shadow-sm transition">Create Invoice</button></div>`;
+    }
+    return `
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr>
+                    <th class="py-3 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-gray-50/50">Invoice</th>
+                    <th class="py-3 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-gray-50/50">Client</th>
+                    ${!isCompact ? `<th class="py-3 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-gray-50/50 hidden sm:table-cell">Date</th>` : ''}
+                    <th class="py-3 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-gray-50/50">Status</th>
+                    <th class="py-3 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-gray-50/50 text-right">Amount</th>
+                    <th class="py-3 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-gray-50/50 text-right"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                ${list.map(i => {
+                    const calc = calculateInvoice(i);
+                    return `
+                    <tr class="hover:bg-gray-50/80 transition group">
+                        <td class="py-4 px-4 whitespace-nowrap"><span class="font-bold text-sm text-gray-900">${i.number}</span></td>
+                        <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-600 font-medium">${getClientName(i.clientId)}</td>
+                        ${!isCompact ? `<td class="py-4 px-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">${i.date}</td>` : ''}
+                        <td class="py-4 px-4 whitespace-nowrap">${getStatusBadge(i.status)}</td>
+                        <td class="py-4 px-4 whitespace-nowrap text-right font-bold text-sm text-gray-900">${formatMoney(calc.total, i.currency)}</td>
+                        <td class="py-4 px-4 whitespace-nowrap text-right">
+                            <div class="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
+                                <button onclick="viewInvoice(${i.id})" title="View" class="w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 flex items-center justify-center transition"><i class="fa-solid fa-eye text-xs"></i></button>
+                                <button onclick="editInvoice(${i.id})" title="Edit" class="w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-primary flex items-center justify-center transition"><i class="fa-solid fa-pen text-xs"></i></button>
+                                <button onclick="downloadPDF(${i.id})" title="Download" class="w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-green-600 flex items-center justify-center transition"><i class="fa-solid fa-download text-xs"></i></button>
+                            </div>
+                        </td>
+                    </tr>`
+                }).join('')}
+            </tbody>
+        </table>
+    </div>`;
+}
+
+function renderDashboard() {
+    let totals = S.invoices.map(calculateInvoice);
+    let paid = totals.filter((x, idx) => S.invoices[idx].status === 'paid').reduce((s, x) => s + x.total, 0);
+    let pending = totals.filter((x, idx) => ['pending', 'overdue'].includes(S.invoices[idx].status)).reduce((s, x) => s + x.total, 0);
+    
+    const statCards = [
+        { title: 'Total Revenue', value: formatMoney(paid), desc: 'Paid across all time', icon: 'fa-chart-line', color: 'text-gray-900', bg: 'bg-white', border: 'border-gray-200' },
+        { title: 'Outstanding', value: formatMoney(pending), desc: 'Pending collection', icon: 'fa-clock', color: 'text-gray-900', bg: 'bg-white', border: 'border-gray-200' },
+        { title: 'Invoices', value: S.invoices.length, desc: 'Total generated', icon: 'fa-file-invoice', color: 'text-gray-900', bg: 'bg-white', border: 'border-gray-200' },
+        { title: 'Clients', value: S.clients.length, desc: 'Active accounts', icon: 'fa-users', color: 'text-gray-900', bg: 'bg-white', border: 'border-gray-200' }
+    ];
+
+    return `
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        ${statCards.map(s => `
+        <div class="${s.bg} p-6 rounded-2xl border ${s.border} shadow-sm flex flex-col justify-between hover:shadow-md transition">
+            <div class="flex justify-between items-start mb-4">
+                <p class="text-sm font-semibold text-gray-500">${s.title}</p>
+                <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400"><i class="fa-solid ${s.icon} text-sm"></i></div>
+            </div>
+            <div>
+                <h3 class="text-2xl font-extrabold ${s.color} tracking-tight">${s.value}</h3>
+                <p class="text-xs text-gray-400 mt-1 font-medium">${s.desc}</p>
+            </div>
+        </div>
+        `).join('')}
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
+                <h3 class="font-bold text-gray-900 text-base">Recent Activity</h3>
+                <button onclick="go('invoices')" class="text-xs font-semibold text-primary hover:text-gray-600 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition">View all</button>
+            </div>
+            <div class="flex-1">
+                ${renderInvoiceTable(S.invoices.slice().reverse().slice(0, 5), true)}
+            </div>
+        </div>
+        
+        <div class="bg-primary p-6 rounded-2xl border border-zinc-800 shadow-sm flex flex-col relative overflow-hidden text-white">
+            <div class="absolute -right-10 -bottom-10 text-zinc-800 opacity-50 transform rotate-12 pointer-events-none">
+                <i class="fa-solid fa-shapes text-[180px]"></i>
+            </div>
+            <h3 class="font-bold text-white text-base mb-1 relative z-10">Quick Actions</h3>
+            <p class="text-zinc-400 text-sm mb-6 relative z-10">Streamline your workflow.</p>
+            
+            <div class="space-y-3 relative z-10 flex-1 flex flex-col">
+                <button onclick="newInvoice()" class="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 transition group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-zinc-700 flex items-center justify-center text-white"><i class="fa-solid fa-plus text-xs"></i></div>
+                        <span class="font-medium text-sm text-zinc-200 group-hover:text-white">Create Invoice</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right text-zinc-500 group-hover:text-white text-xs"></i>
+                </button>
+                <button onclick="newClient()" class="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 transition group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-zinc-700 flex items-center justify-center text-white"><i class="fa-solid fa-user-plus text-xs"></i></div>
+                        <span class="font-medium text-sm text-zinc-200 group-hover:text-white">Add Client</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right text-zinc-500 group-hover:text-white text-xs"></i>
+                </button>
+                <button onclick="go('templates')" class="w-full flex items-center justify-between p-4 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 transition group mt-auto">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-zinc-700 flex items-center justify-center text-white"><i class="fa-solid fa-palette text-xs"></i></div>
+                        <span class="font-medium text-sm text-zinc-200 group-hover:text-white">Change Template</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right text-zinc-500 group-hover:text-white text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderInvoices() {
+    return `
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/30">
+            <div class="relative w-full sm:max-w-xs">
+                <i class="fa-solid fa-search absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="inv-search" oninput="filterInvoices()" placeholder="Search invoices..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:border-gray-400 focus:ring-0 outline-none text-sm transition">
+            </div>
+            <div class="flex items-center gap-2">
+                <select id="inv-filter" onchange="filterInvoices()" class="py-2 pl-4 pr-8 border border-gray-200 rounded-xl focus:border-gray-400 outline-none text-sm font-medium bg-white">
+                    <option value="">All Statuses</option>
+                    <option value="draft">Draft</option>
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="overdue">Overdue</option>
+                </select>
+            </div>
+        </div>
+        <div id="inv-results">
+            ${renderInvoiceTable(S.invoices)}
+        </div>
+    </div>`;
+}
+
+function filterInvoices() {
+    let q = (document.getElementById('inv-search').value || '').toLowerCase();
+    let f = document.getElementById('inv-filter').value;
+    let filtered = S.invoices.filter(i => {
+        let matchStr = (i.number + ' ' + getClientName(i.clientId)).toLowerCase();
+        return (!q || matchStr.includes(q)) && (!f || i.status === f);
+    });
+    document.getElementById('inv-results').innerHTML = renderInvoiceTable(filtered);
+}
+
+function renderClients() {
+    return `
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
+            <h3 class="font-bold text-gray-900 text-base">Directory <span class="ml-2 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">${S.clients.length}</span></h3>
+            <button onclick="newClient()" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition shadow-sm"><i class="fa-solid fa-plus text-xs mr-2"></i>Add Client</button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr>
+                        <th class="py-3 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-gray-50/50">Client Details</th>
+                        <th class="py-3 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-gray-50/50">Contact Info</th>
+                        <th class="py-3 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-gray-50/50 hidden sm:table-cell">Location</th>
+                        <th class="py-3 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 bg-gray-50/50 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    ${S.clients.length ? S.clients.map(c => `
+                    <tr class="hover:bg-gray-50/80 transition">
+                        <td class="py-4 px-6">
+                            <div class="font-bold text-sm text-gray-900">${escapeHtml(c.company || c.name)}</div>
+                            ${c.company ? `<div class="text-xs font-medium text-gray-500 mt-0.5">${escapeHtml(c.name)}</div>` : ''}
+                        </td>
+                        <td class="py-4 px-6 text-sm">
+                            <div class="text-gray-900 font-medium">${escapeHtml(c.email || '—')}</div>
+                            <div class="text-xs text-gray-500 mt-0.5">${escapeHtml(c.phone || '')}</div>
+                        </td>
+                        <td class="py-4 px-6 text-sm text-gray-500 hidden sm:table-cell max-w-[200px] truncate">${escapeHtml(c.address || '—')}</td>
+                        <td class="py-4 px-6 text-right">
+                            <button onclick="editClient(${c.id})" class="w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-primary transition inline-flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
+                        </td>
+                    </tr>`).join('') : `<tr><td colspan="4" class="text-center py-12 text-sm text-gray-500">No clients added yet.</td></tr>`}
+                </tbody>
+            </table>
+        </div>
+    </div>`;
+}
+
+function renderTemplates() {
+    return `
+    <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">Template Gallery</h2>
+            <p class="text-sm text-gray-500">Choose a design that matches your brand.</p>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        ${TEMPLATES.map(t => {
+            const isActive = S.settings.template === t.id;
+            return `
+            <div class="bg-white rounded-2xl border ${isActive ? 'border-primary ring-2 ring-primary/10' : 'border-gray-200'} shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition">
+                <div class="h-40 ${t.preview} border-b relative p-5 flex flex-col gap-2">
+                    <!-- Abstract representation -->
+                    <div class="w-1/3 h-4 bg-current opacity-20 rounded"></div>
+                    <div class="w-full h-px bg-current opacity-10 my-2"></div>
+                    <div class="flex gap-2">
+                        <div class="w-1/2 h-2 bg-current opacity-20 rounded"></div>
+                        <div class="w-1/4 h-2 bg-current opacity-10 rounded"></div>
+                    </div>
+                    <div class="w-2/3 h-2 bg-current opacity-20 rounded"></div>
+                    <div class="w-full h-12 bg-current opacity-5 rounded mt-auto border border-current"></div>
+                    
+                    ${t.type === 'Premium' ? `<div class="absolute top-3 right-3 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wide shadow-sm"><i class="fa-solid fa-crown mr-1"></i>PRO</div>` : ''}
+                    ${isActive ? `<div class="absolute top-3 right-3 bg-primary text-white w-6 h-6 rounded-md flex items-center justify-center shadow-sm"><i class="fa-solid fa-check text-xs"></i></div>` : ''}
+                </div>
+                <div class="p-5 flex-1 flex flex-col">
+                    <h4 class="font-bold text-sm text-gray-900">${t.name}</h4>
+                    <p class="text-xs text-gray-500 mt-1 mb-5 flex-1 line-clamp-2">${t.desc}</p>
+                    <div class="flex gap-2 w-full mt-auto pt-4">
+                        <button onclick="previewTemplate('${t.id}')" class="flex-1 py-2 rounded-xl text-sm font-medium transition bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 shadow-sm">
+                            <i class="fa-solid fa-eye text-xs mr-1"></i> Preview
+                        </button>
+                        <button onclick="setTemplate('${t.id}', '${t.type}')" class="flex-1 py-2 rounded-xl text-sm font-medium transition ${isActive ? 'bg-gray-100 text-gray-800 pointer-events-none' : (t.type === 'Premium' ? 'bg-white border border-gray-200 text-gray-800 hover:border-amber-400 hover:text-amber-600' : 'bg-primary text-white hover:bg-gray-800 shadow-sm')}">
+                            ${isActive ? 'Active' : (t.type === 'Premium' ? '<i class="fa-solid fa-lock text-xs mr-1"></i> Unlock' : 'Apply')}
+                        </button>
+                    </div>
+                </div>
+            </div>`
+        }).join('')}
+    </div>`;
+}
+
+function setTemplate(id, type) {
+    if(type === 'Premium') return showToast('Premium templates are locked in this MVP demo.');
+    S.settings.template = id;
+    saveState();
+    showToast('Template updated successfully');
+    renderTemplates();
+}
+
+function previewTemplate(id) {
+    const t = TEMPLATES.find(x => x.id === id);
+    // Use an existing invoice or fallback to dummy data for realistic preview rendering
+    const sampleInv = S.invoices[0] || {
+        number: 'PREV-000', clientId: S.clients[0]?.id || 1, date: TODAY, due: TODAY,
+        status: 'paid', currency: 'INR', items: [{ description: 'Sample Item for Template Preview', quantity: 1, rate: 25000 }], discount: 0, tax: 18, charges: 0
+    };
+    
+    const html = buildInvoiceHTML(sampleInv);
+    
+    document.getElementById('modal-body').innerHTML = `
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-bold text-gray-900">${t.name} Preview</h3>
+                <p class="text-sm text-gray-500">${t.desc}</p>
+            </div>
+            ${t.type === 'Premium' ? `<span class="bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-md uppercase tracking-wide shadow-sm"><i class="fa-solid fa-crown mr-1"></i>PRO</span>` : `<span class="bg-gray-100 text-gray-600 text-[10px] font-bold px-3 py-1.5 rounded-md uppercase tracking-wide">FREE</span>`}
+        </div>
+        <div class="bg-gray-100 p-2 sm:p-6 rounded-xl flex justify-center max-h-[60vh] overflow-y-auto hide-scroll">
+            <div class="shadow-xl rounded-lg w-full max-w-3xl bg-white overflow-hidden transition-all duration-300 ${t.preview}" style="min-height: 800px; padding: 2px;">
+                <div class="bg-white w-full h-full">
+                    ${html}
+                </div>
+            </div>
+        </div>`;
+    
+    openModal(`Template Preview`, t.type === 'Premium' ? 'Unlock Premium' : 'Apply Template', () => {
+        setTemplate(t.id, t.type);
+        if (t.type !== 'Premium') closeModal();
+    });
+}
+
+function renderBusiness() {
+    let b = S.business;
+    return `
+    <div class="max-w-4xl bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-8 py-6 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h3 class="font-bold text-gray-900 text-base">Business Profile</h3>
+                <p class="text-sm text-gray-500 mt-0.5">Details appearing on your outgoing invoices.</p>
+            </div>
+            <button onclick="saveBusiness()" class="px-5 py-2 bg-primary text-white font-medium text-sm rounded-xl shadow-sm hover:bg-gray-800 transition">Save Changes</button>
+        </div>
+        <div class="p-8">
+            <!-- Logo Section -->
+            <div class="mb-8 flex items-center gap-6">
+                <div class="w-24 h-24 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden relative group">
+                    ${b.logo ? `<img src="${b.logo}" class="w-full h-full object-contain p-2">` : `<i class="fa-solid fa-image text-2xl text-gray-300"></i>`}
+                    <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="text-white text-xs font-medium">Change</span>
+                    </div>
+                    <input type="file" id="b_logo_input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="encodeImageFileAsURL(this, 400, (base64) => { S.business.logo = base64; renderBusiness(); })">
+                </div>
+                <div>
+                    <h4 class="font-semibold text-sm text-gray-900">Brand Logo</h4>
+                    <p class="text-xs text-gray-500 mt-1 max-w-sm">Recommended size: 400x400px. JPG, PNG up to 2MB. This replaces your text name on the invoice header.</p>
+                    ${b.logo ? `<button onclick="S.business.logo=''; renderBusiness();" class="text-xs text-red-500 font-medium mt-2 hover:underline">Remove logo</button>` : ''}
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-100 my-8"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Business Name</label><input id="b_name" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(b.name)}"></div>
+                <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address</label><input id="b_email" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(b.email)}"></div>
+                <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Phone Number</label><input id="b_phone" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(b.phone)}"></div>
+                <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Website</label><input id="b_website" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(b.website)}"></div>
+                <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tax ID / GSTIN</label><input id="b_gstin" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(b.gstin)}"></div>
+                <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">UPI ID</label><input id="b_upi" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(b.upi)}"></div>
+                
+                <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Physical Address</label><textarea id="b_address" rows="2" class="w-full px-4 py-3 input-premium rounded-xl text-sm resize-none">${escapeHtml(b.address)}</textarea></div>
+                <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Bank Details</label><textarea id="b_bank" rows="2" class="w-full px-4 py-3 input-premium rounded-xl text-sm resize-none placeholder-gray-400" placeholder="Bank Name, Account Number, IFSC, etc.">${escapeHtml(b.bank)}</textarea></div>
+            </div>
+        </div>
+    </div>`;
+}
+function saveBusiness() {
+    S.business.name = document.getElementById('b_name').value;
+    S.business.email = document.getElementById('b_email').value;
+    S.business.phone = document.getElementById('b_phone').value;
+    S.business.website = document.getElementById('b_website').value;
+    S.business.gstin = document.getElementById('b_gstin').value;
+    S.business.upi = document.getElementById('b_upi').value;
+    S.business.address = document.getElementById('b_address').value;
+    S.business.bank = document.getElementById('b_bank').value;
+    saveState();
+    showToast('Business profile updated');
+    renderBusiness();
+}
+
+function renderSettings() {
+    return `
+    <div class="max-w-2xl space-y-6">
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-8">
+            <h3 class="font-bold text-gray-900 text-base mb-6 flex items-center gap-2"><i class="fa-solid fa-sliders text-gray-400"></i> Invoice Preferences</h3>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Default Tax Rate (%)</label>
+                    <input id="set_tax" type="number" class="w-full max-w-[200px] px-4 py-2.5 input-premium rounded-xl text-sm" value="${S.settings.tax}">
+                </div>
+                <button onclick="saveSettings()" class="px-5 py-2.5 bg-primary text-white font-medium text-sm rounded-xl shadow-sm hover:bg-gray-800 transition">Save Preferences</button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-red-200 shadow-sm overflow-hidden p-8">
+            <h3 class="font-bold text-red-600 text-base mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</h3>
+            <p class="text-sm text-gray-500 mb-6">Manage your local demo data. Export a JSON backup before resetting.</p>
+            <div class="flex flex-wrap gap-3">
+                <button onclick="exportData()" class="px-4 py-2 bg-white border border-gray-200 text-gray-700 font-medium text-sm rounded-xl hover:bg-gray-50 transition flex items-center gap-2"><i class="fa-solid fa-download"></i> Export Data</button>
+                <button onclick="resetData()" class="px-4 py-2 bg-red-50 text-red-600 font-medium text-sm rounded-xl hover:bg-red-100 transition border border-red-100 flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> Factory Reset</button>
+            </div>
+        </div>
+    </div>`;
+}
+function saveSettings() { S.settings.tax = +document.getElementById('set_tax').value || 0; saveState(); showToast('Settings saved'); }
+function exportData() {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
+    a.download = 'invoiceflow-pro-backup.json';
+    a.click();
+}
+function resetData() {
+    if(confirm('Are you absolutely sure? This will wipe all local data.')) {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+    }
+}
+
+/* ==========================================================================
+   Modals (Create/Edit Form)
+   ========================================================================== */
+function openModal(title, actionText, actionFn, hideAction = false) {
+    document.getElementById('modal-title').textContent = title;
+    const btn = document.getElementById('modal-action-btn');
+    btn.textContent = actionText;
+    btn.onclick = actionFn;
+    btn.style.display = hideAction ? 'none' : 'block';
+    
+    const mb = document.getElementById('modal-backdrop');
+    const mc = document.getElementById('modal-container');
+    mb.classList.remove('hidden');
+    mb.classList.add('flex');
+    setTimeout(() => { mb.classList.remove('opacity-0'); mc.classList.remove('scale-95'); mc.classList.add('scale-100'); }, 10);
+}
+function closeModal() {
+    const mb = document.getElementById('modal-backdrop');
+    const mc = document.getElementById('modal-container');
+    mb.classList.add('opacity-0'); mc.classList.remove('scale-100'); mc.classList.add('scale-95');
+    setTimeout(() => { mb.classList.add('hidden'); mb.classList.remove('flex'); }, 300);
+}
+
+/* User Profile Modal */
+function openUserProfileModal() {
+    let u = S.user;
+    let html = `
+    <div class="space-y-6 p-2">
+        <div class="flex items-center gap-6 mb-2">
+            <div class="relative group">
+                <img id="u_avatar_preview" src="${u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=2563eb&color=fff`}" class="w-20 h-20 rounded-full object-cover border border-gray-200">
+                <div class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <i class="fa-solid fa-camera text-white text-sm"></i>
+                </div>
+                <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="encodeImageFileAsURL(this, 200, (b64) => { document.getElementById('u_avatar_preview').src = b64; document.getElementById('u_avatar_b64').value = b64; })">
+                <input type="hidden" id="u_avatar_b64" value="${u.avatar}">
+            </div>
+            <div>
+                <h4 class="text-sm font-bold text-gray-900">Profile Photo</h4>
+                <p class="text-xs text-gray-500 mt-1">Click image to upload. Max 2MB.</p>
+            </div>
+        </div>
+        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Full Name</label><input id="u_name" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(u.name)}"></div>
+        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label><input id="u_email" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(u.email)}"></div>
+    </div>`;
+    document.getElementById('modal-body').innerHTML = html;
+    openModal('Edit User Profile', 'Save Profile', () => {
+        S.user.name = document.getElementById('u_name').value;
+        S.user.email = document.getElementById('u_email').value;
+        S.user.avatar = document.getElementById('u_avatar_b64').value;
+        saveState();
+        closeModal();
+        showToast('Profile updated');
+    });
+}
+
+/* Clients Form */
+function clientFormHtml(c = {}) {
+    return `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 p-2">
+        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Contact Name *</label><input id="c_name" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(c.name || '')}"></div>
+        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Company Name</label><input id="c_company" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(c.company || '')}"></div>
+        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label><input id="c_email" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(c.email || '')}"></div>
+        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Phone</label><input id="c_phone" class="w-full px-4 py-2.5 input-premium rounded-xl text-sm" value="${escapeHtml(c.phone || '')}"></div>
+        <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Address</label><textarea id="c_address" rows="3" class="w-full px-4 py-3 input-premium rounded-xl text-sm resize-none">${escapeHtml(c.address || '')}</textarea></div>
+    </div>`;
+}
+function newClient() {
+    EDIT_ID = null;
+    document.getElementById('modal-body').innerHTML = clientFormHtml();
+    openModal('Add New Client', 'Save Client', saveClientData);
+}
+function editClient(id) {
+    EDIT_ID = id;
+    const c = S.clients.find(x => x.id == id);
+    document.getElementById('modal-body').innerHTML = clientFormHtml(c);
+    openModal('Edit Client', 'Update Client', saveClientData);
+}
+function saveClientData() {
+    const name = document.getElementById('c_name').value.trim();
+    if(!name) return alert('Contact name is required.');
+    const data = { name, company: document.getElementById('c_company').value, email: document.getElementById('c_email').value, phone: document.getElementById('c_phone').value, address: document.getElementById('c_address').value };
+    if(EDIT_ID) Object.assign(S.clients.find(x => x.id == EDIT_ID), data);
+    else S.clients.push({ id: Date.now(), ...data });
+    saveState(); closeModal(); showToast('Client saved'); if(VIEW === 'clients') renderClients();
+}
+
+/* Invoices Form */
+function getNextInvoiceNumber() {
+    let nums = S.invoices.map(i => parseInt(i.number.replace(/[^0-9]/g, '')) || 0);
+    return 'INV-' + String(Math.max(0, ...nums) + 1).padStart(4, '0');
+}
+function invoiceItemRow(x = { description: '', quantity: 1, rate: 0 }) {
+    return `
+    <div class="inv-row flex flex-col md:flex-row gap-3 py-3 border-b border-gray-100 items-start md:items-center">
+        <div class="w-full md:w-1/2">
+            <input class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-gray-400 desc text-sm shadow-sm" placeholder="Item description" value="${escapeHtml(x.description || '')}">
+        </div>
+        <div class="flex gap-3 w-full md:w-1/2">
+            <input type="number" class="w-1/3 px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-gray-400 qty text-sm shadow-sm" placeholder="Qty" value="${x.quantity || 1}" min="0" step="any">
+            <input type="number" class="w-1/3 px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-gray-400 rate text-sm shadow-sm" placeholder="Price" value="${x.rate || 0}" min="0" step="any">
+            <div class="w-1/3 flex items-center justify-between">
+                <span class="amt font-bold text-sm text-gray-800">0.00</span>
+                <button onclick="this.closest('.inv-row').remove(); calcForm()" class="w-7 h-7 rounded text-gray-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center shrink-0 transition"><i class="fa-solid fa-trash-can text-xs"></i></button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function invoiceFormHtml(i = {}) {
+    let items = (i.items && i.items.length) ? i.items : [{}];
+    let currencyOptions = ['INR', 'USD', 'EUR', 'GBP'].map(x => `<option ${i.currency===x ? 'selected' : ''}>${x}</option>`).join('');
+    let statusOptions = ['draft', 'pending', 'paid', 'overdue'].map(x => `<option ${i.status===x ? 'selected' : ''}>${x}</option>`).join('');
+    let clientOptions = S.clients.map(c => `<option value="${c.id}" ${c.id==i.clientId ? 'selected' : ''}>${escapeHtml(c.company || c.name)}</option>`).join('');
+    if(S.clients.length === 0) clientOptions = `<option value="">-- Add a client first --</option>`;
+
+    return `
+    <div class="space-y-6">
+        <!-- Top Meta -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Invoice No</label><input id="f_no" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold shadow-sm" value="${i.number || getNextInvoiceNumber()}"></div>
+            <div class="sm:col-span-2 lg:col-span-1 xl:col-span-2"><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Client</label><select id="f_client" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm shadow-sm bg-white">${clientOptions}</select></div>
+            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Date</label><input type="date" id="f_date" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm shadow-sm bg-white" value="${i.date || TODAY}"></div>
+            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Due Date</label><input type="date" id="f_due" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm shadow-sm bg-white" value="${i.due || TODAY}"></div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
+                <h4 class="font-bold text-sm text-gray-900">Line Items</h4>
+                <select id="f_cur" class="text-xs px-2 py-1 border border-gray-200 rounded-md font-medium" onchange="calcForm()">${currencyOptions}</select>
+            </div>
+            <div>
+                <div class="hidden md:flex gap-3 bg-white p-3 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    <div class="w-1/2">Description</div>
+                    <div class="flex w-1/2 gap-3">
+                        <div class="w-1/3">Quantity</div>
+                        <div class="w-1/3">Rate</div>
+                        <div class="w-1/3 text-right pr-10">Amount</div>
+                    </div>
+                </div>
+                <div id="f_items" class="px-3" oninput="calcForm()">
+                    ${items.map(x => invoiceItemRow(x)).join('')}
+                </div>
+                <div class="bg-gray-50/50 p-3 border-t border-gray-100">
+                    <button onclick="document.getElementById('f_items').insertAdjacentHTML('beforeend', invoiceItemRow()); calcForm()" class="text-xs font-bold text-primary hover:text-gray-600 flex items-center gap-1.5"><i class="fa-solid fa-plus bg-white border border-gray-200 w-5 h-5 rounded flex items-center justify-center"></i> Add Item</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lower Section -->
+        <div class="flex flex-col lg:flex-row gap-6">
+            <div class="flex-1 space-y-4">
+                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Payment Details</label>
+                    <textarea id="f_pay" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none" placeholder="Bank details, UPI, or link...">${escapeHtml(i.payment !== undefined ? i.payment : (S.business.upi || S.business.bank || ''))}</textarea>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Notes & Terms</label>
+                    <textarea id="f_notes" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none" placeholder="Thank you for your business...">${escapeHtml(i.notes || '')}</textarea>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest w-16">Status</label>
+                    <select id="f_status" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white font-medium">${statusOptions}</select>
+                </div>
+            </div>
+
+            <div class="w-full lg:w-72 bg-white p-5 rounded-xl border border-gray-200 shadow-sm h-fit">
+                <div class="space-y-3 text-sm" oninput="calcForm()">
+                    <div class="flex justify-between items-center text-gray-500 font-medium text-xs">
+                        <span>Subtotal</span>
+                        <span id="t_sub" class="text-gray-900">0.00</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="f_dtype" class="px-2 py-1.5 border border-gray-200 rounded-md text-xs flex-1 text-gray-600"><option value="fixed" ${i.discountType!=='percent'?'selected':''}>Discount (Fixed)</option><option value="percent" ${i.discountType==='percent'?'selected':''}>Discount (%)</option></select>
+                        <input id="f_disc" type="number" class="w-20 px-2 py-1.5 border border-gray-200 rounded-md text-right text-xs" value="${i.discount || 0}">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-500 flex-1 text-right mt-1 font-medium">Tax (%)</span>
+                        <input id="f_tax" type="number" class="w-20 px-2 py-1.5 border border-gray-200 rounded-md text-right text-xs" value="${i.tax ?? S.settings.tax}">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-500 flex-1 text-right mt-1 font-medium">Extra Fees</span>
+                        <input id="f_ch" type="number" class="w-20 px-2 py-1.5 border border-gray-200 rounded-md text-right text-xs" value="${i.charges || 0}">
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-gray-100 flex justify-between items-end">
+                        <span class="font-bold text-gray-900 text-sm uppercase tracking-wider">Total</span>
+                        <span id="t_grand" class="text-xl font-extrabold text-primary">0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function calcForm() {
+    let cur = document.getElementById('f_cur')?.value || 'INR';
+    let rows = document.querySelectorAll('#f_items .inv-row');
+    let sub = 0;
+    
+    rows.forEach(r => {
+        let q = +(r.querySelector('.qty').value) || 0;
+        let p = +(r.querySelector('.rate').value) || 0;
+        let a = q * p;
+        r.querySelector('.amt').textContent = formatMoney(a, cur);
+        sub += a;
+    });
+
+    let isPct = document.getElementById('f_dtype').value === 'percent';
+    let discVal = +(document.getElementById('f_disc').value) || 0;
+    let disc = isPct ? (sub * discVal / 100) : discVal;
+    
+    let subAfterDisc = Math.max(0, sub - disc);
+    let tax = subAfterDisc * (+(document.getElementById('f_tax').value) || 0) / 100;
+    let ch = +(document.getElementById('f_ch').value) || 0;
+    let total = subAfterDisc + tax + ch;
+
+    document.getElementById('t_sub').textContent = formatMoney(sub, cur);
+    document.getElementById('t_grand').textContent = formatMoney(total, cur);
+}
+
+function newInvoice() {
+    if(S.clients.length === 0) { alert("Please add a client first."); return go('clients'); }
+    EDIT_ID = null;
+    document.getElementById('modal-body').innerHTML = invoiceFormHtml();
+    openModal('Create Invoice', 'Save Invoice', saveInvoiceData);
+    setTimeout(calcForm, 10);
+}
+function editInvoice(id) {
+    EDIT_ID = id;
+    const i = S.invoices.find(x => x.id == id);
+    document.getElementById('modal-body').innerHTML = invoiceFormHtml(i);
+    openModal(`Edit ${i.number}`, 'Update Invoice', saveInvoiceData);
+    setTimeout(calcForm, 10);
+}
+
+function saveInvoiceData() {
+    let rows = document.querySelectorAll('#f_items .inv-row');
+    let items = Array.from(rows).map(r => ({
+        description: r.querySelector('.desc').value.trim(),
+        quantity: +(r.querySelector('.qty').value) || 0,
+        rate: +(r.querySelector('.rate').value) || 0
+    })).filter(x => x.description || x.rate);
+    
+    let clientId = document.getElementById('f_client').value;
+    if(!clientId || !items.length) return alert('Please select a client and add at least one line item.');
+
+    let data = {
+        number: document.getElementById('f_no').value, clientId: +clientId,
+        date: document.getElementById('f_date').value, due: document.getElementById('f_due').value,
+        status: document.getElementById('f_status').value, currency: document.getElementById('f_cur').value,
+        items, discountType: document.getElementById('f_dtype').value, discount: +(document.getElementById('f_disc').value) || 0,
+        tax: +(document.getElementById('f_tax').value) || 0, charges: +(document.getElementById('f_ch').value) || 0,
+        notes: document.getElementById('f_notes').value, payment: document.getElementById('f_pay').value,
+        template: S.settings.template
+    };
+
+    if(EDIT_ID) Object.assign(S.invoices.find(x => x.id == EDIT_ID), data);
+    else S.invoices.push({ id: Date.now(), ...data });
+    
+    saveState(); closeModal(); showToast('Invoice saved'); go(VIEW);
+}
+
+/* ==========================================================================
+   PDF Generation (Template Engine)
+   ========================================================================== */
+function buildInvoiceHTML(inv) {
+    const client = S.clients.find(c => c.id === inv.clientId) || {};
+    const biz = S.business;
+    const calc = calculateInvoice(inv);
+    
+    // Core Layout, styled professionally
+    return `
+    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 800px; margin: 0 auto; background: #fff; padding: 50px; color: #18181b;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px;">
+            <div>
+                ${biz.logo 
+                    ? `<img src="${biz.logo}" style="max-height: 60px; max-width: 200px; object-fit: contain; margin-bottom: 15px;">` 
+                    : `<h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 800; color: #18181b; letter-spacing: -0.5px;">${escapeHtml(biz.name)}</h2>`
+                }
+                <div style="color: #52525b; font-size: 11px; line-height: 1.6;">
+                    ${escapeHtml(biz.address).replace(/\n/g, '<br>')}<br>
+                    ${escapeHtml(biz.email)} ${biz.phone ? `| ${escapeHtml(biz.phone)}` : ''}<br>
+                    ${biz.gstin ? 'Tax ID: ' + escapeHtml(biz.gstin) : ''}
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <h1 style="margin:0; font-size: 40px; font-weight: 800; color: #f4f4f5; letter-spacing: -1px; text-transform: uppercase;">Invoice</h1>
+                <p style="margin:5px 0 0 0; color: #18181b; font-size: 16px; font-weight: 700;"># ${inv.number}</p>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 40px; padding-top: 30px; border-top: 1px solid #f4f4f5;">
+            <div>
+                <p style="margin: 0 0 5px 0; font-size: 10px; font-weight: bold; color: #a1a1aa; text-transform: uppercase; letter-spacing: 1px;">Billed To</p>
+                <h3 style="margin: 0 0 5px 0; font-size: 15px; color: #18181b; font-weight: 700;">${escapeHtml(client.company || client.name)}</h3>
+                <div style="color: #52525b; font-size: 12px; line-height: 1.5;">
+                    ${client.company ? escapeHtml(client.name) + '<br>' : ''}
+                    ${escapeHtml(client.address || '').replace(/\n/g, '<br>')}<br>
+                    ${escapeHtml(client.email || '')}
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <tr><td style="padding: 4px 15px 4px 0; color: #71717a; font-weight: 500;">Issue Date</td><td style="padding: 4px 0; font-weight: 600;">${inv.date}</td></tr>
+                    <tr><td style="padding: 4px 15px 4px 0; color: #71717a; font-weight: 500;">Due Date</td><td style="padding: 4px 0; font-weight: 600;">${inv.due}</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px;">
+            <thead>
+                <tr style="border-bottom: 2px solid #18181b;">
+                    <th style="padding: 12px 0; text-align: left; color: #18181b; font-weight: 700;">Description</th>
+                    <th style="padding: 12px 0; text-align: center; color: #18181b; font-weight: 700;">Qty</th>
+                    <th style="padding: 12px 0; text-align: right; color: #18181b; font-weight: 700;">Rate</th>
+                    <th style="padding: 12px 0; text-align: right; color: #18181b; font-weight: 700;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${inv.items.map((item, idx) => `
+                <tr style="border-bottom: 1px solid #f4f4f5;">
+                    <td style="padding: 16px 0; font-weight: 500;">${escapeHtml(item.description)}</td>
+                    <td style="padding: 16px 0; text-align: center; color: #52525b;">${item.quantity}</td>
+                    <td style="padding: 16px 0; text-align: right; color: #52525b;">${formatMoney(item.rate, inv.currency)}</td>
+                    <td style="padding: 16px 0; text-align: right; font-weight: 600;">${formatMoney(item.quantity * item.rate, inv.currency)}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
+            <table style="width: 320px; border-collapse: collapse; font-size: 13px;">
+                <tr><td style="padding: 8px 0; color: #71717a;">Subtotal</td><td style="padding: 8px 0; text-align: right; font-weight: 600;">${formatMoney(calc.sub, inv.currency)}</td></tr>
+                ${calc.discount > 0 ? `<tr><td style="padding: 8px 0; color: #71717a;">Discount</td><td style="padding: 8px 0; text-align: right; font-weight: 600;">- ${formatMoney(calc.discount, inv.currency)}</td></tr>` : ''}
+                ${calc.tax > 0 ? `<tr><td style="padding: 8px 0; color: #71717a;">Tax (${inv.tax}%)</td><td style="padding: 8px 0; text-align: right; font-weight: 600;">${formatMoney(calc.tax, inv.currency)}</td></tr>` : ''}
+                ${calc.charges > 0 ? `<tr><td style="padding: 8px 0; color: #71717a;">Other Charges</td><td style="padding: 8px 0; text-align: right; font-weight: 600;">${formatMoney(calc.charges, inv.currency)}</td></tr>` : ''}
+                <tr style="border-top: 2px solid #18181b;">
+                    <td style="padding: 16px 0 0 0; font-weight: 800; font-size: 16px; text-transform: uppercase;">Total Due</td>
+                    <td style="padding: 16px 0 0 0; text-align: right; font-weight: 800; font-size: 20px;">${formatMoney(calc.total, inv.currency)}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="font-size: 11px; color: #52525b; line-height: 1.6; border-top: 1px solid #f4f4f5; padding-top: 30px;">
+            ${inv.payment ? `<strong style="color: #18181b;">Payment Information:</strong><br>${escapeHtml(inv.payment).replace(/\n/g, '<br>')}<br><br>` : ''}
+            ${inv.notes ? `<strong style="color: #18181b;">Notes:</strong><br>${escapeHtml(inv.notes).replace(/\n/g, '<br>')}` : ''}
+        </div>
+    </div>`;
+}
+
+function viewInvoice(id) {
+    const inv = S.invoices.find(x => x.id === id);
+    const html = buildInvoiceHTML(inv);
+    document.getElementById('modal-body').innerHTML = `
+        <div class="flex justify-end mb-4 gap-2">
+            <button onclick="downloadPDF(${id})" class="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium shadow-sm hover:bg-gray-50 transition"><i class="fa-solid fa-download mr-2 text-gray-400"></i>Download PDF</button>
+            <button onclick="editInvoice(${id})" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium shadow-sm hover:bg-gray-800 transition"><i class="fa-solid fa-pen mr-2"></i>Edit</button>
+        </div>
+        <div class="bg-gray-100 p-2 sm:p-6 rounded-xl flex justify-center max-h-[65vh] overflow-y-auto hide-scroll">
+            <div class="shadow-xl rounded-lg w-full max-w-3xl bg-white overflow-hidden" style="min-height: 800px;">
+                ${html}
+            </div>
+        </div>`;
+    openModal(`Invoice ${inv.number}`, '', null, true);
+}
+
+function downloadPDF(id) {
+    const inv = S.invoices.find(x => x.id === id);
+    if (!inv) return;
+    
+    showToast('Generating high-quality PDF...');
+    const client = S.clients.find(c => c.id === inv.clientId) || {};
+    const clientNameStr = (client.company || client.name || 'Client').replace(/[^a-z0-9]/gi, '_');
+    const container = document.getElementById('pdf-container');
+    container.innerHTML = buildInvoiceHTML(inv);
+    container.classList.remove('hidden');
+
+    const opt = {
+        margin:       0,
+        filename:     `Invoice_${inv.number}_${clientNameStr}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(container).save().then(() => {
+        container.classList.add('hidden');
+        showToast('PDF Downloaded successfully');
+    }).catch(err => {
+        container.classList.add('hidden');
+        alert("PDF Generation Failed: " + err);
+    });
+}
+
+// Initialization
+updateSidebarUser();
+if(localStorage.getItem(STORAGE_KEY)) {
+    document.getElementById('auth-screen').classList.add('hidden');
+    go('dashboard');
+} else {
+    document.getElementById('auth-screen').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
